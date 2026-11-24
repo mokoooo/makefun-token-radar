@@ -21,16 +21,17 @@ heuristic claim from the sealed snapshot, not a price prediction.
 
 ```sh
 mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts --input ../input/snapshot.json
-node --test test/ranking.test.mjs
+node --test test/model.test.mjs
 ```
 
 `main.ts` (Node 22, standard library only) reads the snapshot, writes
 `board.json`, the dashboard's `data.js`, copies `dashboard/` and
 `screenshots/` to the output directory, and writes `dossier.json` with
 `buildDossier` from `vendor/makefun-board.ts`. Two runs produce byte-identical
-outputs. `analyze.mjs` / `src/` are the earlier prototype the entry grew out
-of; the entry itself is `main.ts` + `lib/` + `dashboard/` + `screenshots/` +
-`vendor/`.
+outputs. The entry is `main.ts` + `lib/` + `dashboard/` + `screenshots/` +
+`vendor/`; `test/model.test.mjs` exercises the shipped model in `lib/model.ts`
+(candidate filter, growth/maturity-adjusted ranking, farm-step rules,
+board validation, snapshot parsing) and the shipped dashboard files.
 
 ## License
 

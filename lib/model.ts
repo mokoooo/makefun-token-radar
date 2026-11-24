@@ -193,19 +193,48 @@ function actionFor(p: SnapshotProtocol, capital: number, chain: string): string 
   return `Deposit $${capital} of USDC into ${n} on ${chain} and keep the position open in the farming wallet.`;
 }
 
-/** Six concrete farm steps per protocol, each a single string of 20..600 chars with cost and time. */
+function weeklyActionFor(p: SnapshotProtocol): string {
+  const c = (p.category ?? '').toLowerCase();
+  if (c.includes('lend') || c.includes('cdp') || c.includes('collateral')) return 'a deposit or a borrow';
+  if (c.includes('dex') || c.includes('yield') || c.includes('leveraged')) return 'a swap or a liquidity top-up';
+  if (c.includes('bridge')) return 'a bridge transfer';
+  if (c.includes('staking') || c.includes('restak')) return 'a stake or unstake';
+  if (c.includes('perpetual') || c.includes('derivative') || c.includes('options')) return 'a small trade';
+  if (c.includes('prediction')) return 'a market position';
+  if (c.includes('curator') || c.includes('allocator')) return 'a vault deposit';
+  if (c.includes('stable')) return 'a mint or a deposit';
+  if (c.includes('rwa')) return 'a yield-asset mint';
+  if (c.includes('insurance')) return 'a cover purchase';
+  if (c.includes('nft')) return 'a small trade';
+  return 'a deposit, a swap or a vote';
+}
+
+/** Six concrete farm steps per protocol, each a single string of 20..600 chars with cost and time. Steps 3-6 cite the row's own chain, category, 7-day TVL move, age and capital tier, so plans differ per protocol. */
 export function farmSteps(p: SnapshotProtocol, age: number | null): string[] {
   const chain = chainOf(p);
   const capital = capitalFor(p);
   const hold = holdDaysFor(age);
   const gas = capital >= 150 ? 8 : 4;
+  const growthNote = p.change_7d == null
+    ? 'its 7-day TVL move is not reported'
+    : p.change_7d >= 0
+      ? `its TVL is up ${p.change_7d.toFixed(2)}% over 7 days, so keep the position active`
+      : `its TVL is down ${Math.abs(p.change_7d).toFixed(2)}% over 7 days, so keep the activity small and steady`;
+  const ageReason = age === null
+    ? 'its listing date is not in the snapshot'
+    : age < 180
+      ? `it has only run ${age} days`
+      : age < 365
+        ? `it has run ${age} days`
+        : `it has run for over a year (${age} days)`;
+  const catLabel = p.category ?? 'protocol';
   const steps = [
     `Create a fresh wallet for ${p.name} only, fund it on ${chain}, and store the seed phrase offline. Cost: under $3 of gas. Time: 5 minutes.`,
     `${actionFor(p, capital, chain)} Cost: $${capital} of capital plus about $${gas} of gas. Time: 15 minutes to set up.`,
-    `Repeat one qualifying action every week, such as a deposit, a borrow, a swap, a stake or a governance vote. Cost: about $2 of gas a week. Time: 10 minutes a week.`,
-    `Hold the position for at least ${hold} days so the activity spans more than one weekly snapshot of the protocol. Cost: the $${capital} stays locked in the position. Time: ${hold} days.`,
-    `Check the protocol's own points, rewards or governance page weekly and claim only through links that page itself publishes. Cost: nothing to check, never pay a fee to claim. Time: 10 minutes a week.`,
-    `Keep a farm log with the wallet address, every date, amount and transaction hash, so the position can be repeated or unwound safely. Cost: nothing. Time: 5 minutes per entry.`,
+    `Repeat one qualifying action every week on ${chain}: ${weeklyActionFor(p)} — ${growthNote}. Cost: about $2 of gas a week. Time: 10 minutes a week.`,
+    `Hold the position for at least ${hold} days — ${ageReason} — so the activity spans more than one weekly snapshot of the protocol. Cost: the $${capital} stays locked in the position. Time: ${hold} days.`,
+    `Check ${p.name}'s ${catLabel} page weekly for points, rewards or governance and claim only through links that page itself publishes. Cost: nothing to check, never pay a fee to claim. Time: 10 minutes a week.`,
+    `Keep a farm log for the $${capital} position on ${chain} with the wallet address, every date, amount and transaction hash, so the position can be repeated or unwound safely. Cost: nothing. Time: 5 minutes per entry.`,
   ];
   return steps.map((s) => (s.length > 600 ? `${s.slice(0, 596)}...` : s));
 }

@@ -14,12 +14,32 @@
     var out = {};
     var h = (location.hash || '').replace(/^#/, '');
     h.split('&').forEach(function (part) {
-      var kv = part.split('=');
-      if (kv[0]) out[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+      if (!part) return;
+      var eq = part.indexOf('=');
+      var k = eq >= 0 ? part.slice(0, eq) : part;
+      var v = eq >= 0 ? part.slice(eq + 1) : '';
+      out[decodeURIComponent(k)] = decodeURIComponent(v);
     });
     return out;
   }
   var deepLink = hashParams();
+
+  // Write the current view back to the URL hash so the link in the address
+  // bar always shares exactly what is on screen. replaceState keeps this
+  // out of the browser history (no entry per keystroke or click).
+  function syncHash() {
+    var parts = [];
+    var q = document.getElementById('q').value.trim();
+    if (q) parts.push('q=' + encodeURIComponent(q));
+    if (catSel.value) parts.push('cat=' + encodeURIComponent(catSel.value));
+    if (chainSel.value) parts.push('chain=' + encodeURIComponent(chainSel.value));
+    if (document.getElementById('watch').checked) parts.push('watch=1');
+    if (document.getElementById('growth').checked) parts.push('growth=1');
+    if (selected) parts.push('slug=' + encodeURIComponent(selected));
+    try {
+      history.replaceState(null, '', parts.length ? '#' + parts.join('&') : location.pathname + location.search);
+    } catch (e) { /* file:// or restricted contexts: the view still renders */ }
+  }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -89,6 +109,7 @@
         '<td>' + esc((r.chains || []).join(', ')) + '</td></tr>';
     }).join('');
     document.getElementById('rows').innerHTML = html || '<tr><td colspan="9">No protocol matches these filters.</td></tr>';
+    syncHash();
   }
 
   function showDetail(r) {
