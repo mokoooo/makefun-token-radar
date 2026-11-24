@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Launch Radar — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <h1>Token Launch Radar</h1>
+  <p id="meta" class="meta">Loading the board…</p>
+  <p class="note">Candidates record no token yet (DefiLlama carries neither a gecko id nor a symbol for them),
+  excluding wrapped, staked and bridged products and versioned siblings. Implied value = TVL &times; the median
+  market-cap/TVL multiple of token-bearing peers in the same category (global median when a category has fewer
+  than 3 peers), adjusted for 7-day TVL growth and for how long the protocol has run. It is this board's own
+  heuristic claim from the sealed snapshot, not a price prediction.</p>
+</header>
+<section class="controls" aria-label="Filters">
+  <label>Search <input id="q" type="search" placeholder="name, slug or chain"></label>
+  <label>Category <select id="cat"><option value="">All categories</option></select></label>
+  <label>Chain <select id="chain"><option value="">All chains</option></select></label>
+  <label class="check"><input id="watch" type="checkbox"> House watchlist only</label>
+  <label class="check"><input id="growth" type="checkbox"> Growing (7d &ge; 0%)</label>
+  <span id="count" class="count"></span>
+</section>
+<main class="layout">
+  <table id="board" aria-label="Ranked board">
+    <thead><tr>
+      <th data-key="rank">#</th><th data-key="name">Protocol</th><th data-key="category">Category</th>
+      <th data-key="tvl_usd" class="num">TVL</th><th data-key="implied_value_usd" class="num">Implied value</th>
+      <th data-key="change_7d" class="num">7d change</th><th data-key="age_days" class="num">Age (days)</th>
+      <th>Watchlist</th><th>Chains</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <aside id="detail" class="detail" aria-label="Protocol detail">
+    <p class="hint">Select a protocol to see its detail and farm plan.</p>
+  </aside>
+</main>
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
